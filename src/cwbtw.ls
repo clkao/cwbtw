@@ -1,9 +1,5 @@
-request = require \request
-xml2js  = require \xml2js
-cheerio = require \cheerio
-
 fetch(args, cb) =
-    error, {statusCode}, body <- request args
+    error, {statusCode}, body <- (require \request) args
     throw error if error
     throw 'got response '+statusCode unless statusCode === 200
     cb body
@@ -14,7 +10,7 @@ fetch_rain = fetch url: \http://www.cwb.gov.tw/V7/observe/rainfall/A136.htm
 
 parse_rain(data, cb) =
     res = []
-    $ = cheerio.load(data)
+    $ = require \cheerio .load(data)
     [...,time] = $('table.description td').last!html!split(/ : /)
 
     $('table#tableData tbody tr').each ->
@@ -51,7 +47,7 @@ parse_area(Value, timeslice) =
         {} <<< curr <<< frame
 
 parse_forecast_72hr(data, cb) =
-    parser = new xml2js.Parser!
+    parser = new (require \xml2js).Parser
     tmpslice = {}
 
     (err, {ForecastData:result}) <- parser.parseString data
