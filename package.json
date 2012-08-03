@@ -1,0 +1,11 @@
+{ "name" :            "cwbtw"
+    , "description" : "retreiving weather info for Taiwan"
+    , "version" :    "0.0.1"
+    , "dependencies": {
+        "optimist": "*",
+        "request": "*",
+        "xml2js": "*",
+        "cheerio": "0.9.x"
+    }
+    , "directories": { "bin": "./bin" }
+}
