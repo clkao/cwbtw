@@ -3,16 +3,14 @@ xml2js  = require \xml2js
 cheerio = require \cheerio
 
 fetch(args, cb) =
-    error, response, body <- request args
+    error, {statusCode}, body <- request args
     throw error if error
-    throw 'got response '+that unless response.statusCode == 200
+    throw 'got response '+statusCode unless statusCode === 200
     cb body
 
-fetch_forecast_by_town(id, cb) = 
-    fetch(do
-        url: "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
-        headers: {\Referer: \http://www.cwb.gov.tw/township/enhtml/index.htm}
-    cb)
+### rain meters
+
+fetch_rain = fetch url: \http://www.cwb.gov.tw/V7/observe/rainfall/A136.htm
 
 parse_rain(data, cb) =
     res = []
@@ -28,6 +26,12 @@ parse_rain(data, cb) =
     cb time, res
 
 ### 72hr forecast
+
+fetch_forecast_by_town(id, cb) =
+    fetch {
+        url: "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
+        headers: {\Referer: \http://www.cwb.gov.tw/township/enhtml/index.htm}
+    }, cb
 
 get_frames(Value, layout, timeslice) =
     i = 0
@@ -59,7 +63,9 @@ parse_forecast_72hr(data, cb) =
     cb new Date(result.IssueTime),
     {[areaid, parse_area Value, timeslice] for {'@':{AreaID:areaid}, Value} in result.County.Area}
 
-
-fetch_rain = fetch url: \http://www.cwb.gov.tw/V7/observe/rainfall/A136.htm
-
-module.exports = { fetch_forecast_by_town, fetch_rain, parse_rain, parse_forecast_72hr }
+module.exports = {
+    fetch_rain,
+    parse_rain,
+    fetch_forecast_by_town,
+    parse_forecast_72hr,
+}
