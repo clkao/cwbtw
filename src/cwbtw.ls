@@ -1,3 +1,5 @@
+cwbspec = require \./cwb-spec
+
 fetch(args, cb) =
     error, {statusCode}, body <- (require \request) args
     throw error if error
@@ -60,6 +62,7 @@ parse_forecast_72hr(data, cb) =
     {[areaid, parse_area Value, timeslice] for {'@':{AreaID:areaid}, Value} in result.County.Area}
 
 module.exports = {
+    cwbspec,
     fetch_rain,
     parse_rain,
     fetch_forecast_by_town,
