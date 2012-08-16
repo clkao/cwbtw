@@ -8,4 +8,5 @@
         "cheerio": "0.9.x"
     }
     , "directories": { "bin": "./bin" }
+    , "main": "lib/cwbtw.js"
 }
