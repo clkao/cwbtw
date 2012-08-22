@@ -26,6 +26,7 @@ parse_rain(data, cb) =
 ### 72hr forecast
 
 fetch_forecast_by_town(id, cb) =
+    console.log "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
     fetch {
         url: "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
         headers: {\Referer: \http://www.cwb.gov.tw/township/enhtml/index.htm}
@@ -53,7 +54,8 @@ parse_forecast_72hr(data, cb) =
     tmpslice = {}
 
     (err, {ForecastData:result}) <- parser.parseString data
-    [ { '@':slice12, FcstTime:tmpslice[\12] }, { '@':slice3, FcstTime:tmpslice[\3] } ] = result.Metadata.Time
+    [ { '@':slice12, FcstTime:tmpslice[\12] },
+      { '@':slice3,  FcstTime:tmpslice[\3 ] } ] = result.Metadata.Time
 
     timeslice = {[key, ts.map expand_time] for key, ts of tmpslice}
         where expand_time = -> new Date(if typeof it is \object => it[\#] else it)
@@ -100,7 +102,6 @@ parse_typhoon(data, cb) =
             if matched = line == /Center Position\s+([\d\.]+)N\s+([\d\.]+)E/ => f[*-1] <<< {lat:parseFloat(matched[1]),lon:parseFloat(matched[2])}
 
         f.unshift { lat, lon, time: \T0, swind, windr }
-        console.log f
         res.push { lat, lon, date, name, forecasts: f }
     cb res
 
