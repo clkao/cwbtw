@@ -61,10 +61,40 @@ parse_forecast_72hr(data, cb) =
     cb new Date(result.IssueTime),
     {[areaid, parse_area Value, timeslice] for {'@':{AreaID:areaid}, Value} in result.County.Area}
 
+# typhoon
+
+fetch_typhoon(cb) =
+    fetch {
+        url: \http://www.cwb.gov.tw/V7/prevent/typhoon/Data/PTA_NEW/pta_index_eng.htm
+        headers: Referer: \http://www.cwb.gov.tw/V7/prevent/typhoon/Data/PTA_NEW/index_eng.htm
+    }, cb
+
+parse_typhoon(data, cb) =
+    $ = require \cheerio .load(data)
+
+    res = []
+    for x in $('div[id^="effect-"]')get!map $ when x.attr(\id)match /effect-\d-b/
+        $$ = $.load(x.html!)
+        name = $$('.DataTabletitle')text! - /^\s*/g - /\s*$/gm - /Typhoon /
+        [current, forecast] = $$(\.DataTableContent)get!.map -> $(it)text!
+        date = current.split("\r\n").shift!
+        [,lat,lon] = current.match /Center Location\s+([\d\.]+)N\s+([\d\.]+)E/;
+        lines = forecast.split("\r\n")
+        f = []
+        for line in lines
+            if matched = line == /(\d+) hours valid/ => f.push time: matched[1]
+            if matched = line == /Center Position\s+([\d\.]+)N\s+([\d\.]+)E/ => f[*-1] <<< {lat:matched[1],lon:matched[2]}
+        res.push { lat, lon, date, name, forecasts: f }
+
+    cb res
+
+
 module.exports = {
     cwbspec,
     fetch_rain,
     parse_rain,
     fetch_forecast_by_town,
     parse_forecast_72hr,
+    fetch_typhoon,
+    parse_typhoon,
 }
