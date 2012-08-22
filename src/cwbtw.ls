@@ -79,15 +79,30 @@ parse_typhoon(data, cb) =
         [current, forecast] = $$(\.DataTableContent)get!.map -> $(it)text!
         date = current.split("\r\n").shift!
         [,lat,lon] = current.match /Center Location\s+([\d\.]+)N\s+([\d\.]+)E/;
+
+        [,swind] = current == /Maximum Wind Speed (\d+) m\/s/
+        lat = parseFloat lat
+        lon = parseFloat lon
+        swind *= 2
+        windr = []
+        re = /Radius of (\d+)m\/s\s*(\d+)km/
+        while current.match re
+            current .= replace re, (,wr,r) ->
+                wr *= 2
+                r /= 1.852
+                windr.unshift { wr, ne: r, sw: r, nw: r, se: r }
+                ''
+
         lines = forecast.split("\r\n")
         f = []
         for line in lines
-            if matched = line == /(\d+) hours valid/ => f.push time: matched[1]
-            if matched = line == /Center Position\s+([\d\.]+)N\s+([\d\.]+)E/ => f[*-1] <<< {lat:matched[1],lon:matched[2]}
+            if matched = line == /(\d+) hours valid/ => f.push time: parseFloat(matched[1])
+            if matched = line == /Center Position\s+([\d\.]+)N\s+([\d\.]+)E/ => f[*-1] <<< {lat:parseFloat(matched[1]),lon:parseFloat(matched[2])}
+
+        f.unshift { lat, lon, time: \T0, swind, windr }
+        console.log f
         res.push { lat, lon, date, name, forecasts: f }
-
     cb res
-
 
 module.exports = {
     cwbspec,
