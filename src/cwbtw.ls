@@ -1,6 +1,6 @@
 cwbspec = require \./cwb-spec
 
-fetch(args, cb) =
+fetch = (args, cb) -->
     error, {statusCode}, body <- (require \request) args
     throw error if error
     throw 'got response '+statusCode unless statusCode === 200
@@ -10,29 +10,27 @@ fetch(args, cb) =
 
 fetch_rain = fetch url: \http://www.cwb.gov.tw/V7/observe/rainfall/A136.htm
 
-parse_rain(data, cb) =
+parse_rain = (data, cb) -->
     res = []
     $ = require \cheerio .load(data)
     [...,time] = $('table.description td').last!html!split(/ : /)
-
     $('table#tableData tbody tr').each ->
-        try [_area, station, rain] = $ @ .find \td .get!map -> $ it .text!
+        try [_area, station, rain] = @find \td .map -> @text!
         [,station_name,station_id] = station.match /(\S+)\s*\((\S+)\)/
         [,town,area] = _area.match /(...)(.*)/
         res.push [station_id, rain, town, area, station_name]
-
     cb time, res
 
 ### 72hr forecast
 
-fetch_forecast_by_town(id, cb) =
+fetch_forecast_by_town = (id, cb) -->
     console.log "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
     fetch {
         url: "http://www.cwb.gov.tw/township/XML/#{id}_72hr_EN.xml?_=#{ new Date!getTime! }"
         headers: {\Referer: \http://www.cwb.gov.tw/township/enhtml/index.htm}
     }, cb
 
-get_frames(Value, layout, timeslice) =
+get_frames = (Value, layout, timeslice) ->
     i = 0
     [{ts: timeslice[layout][i++]} <<< frame \
         for { '@':{layout:fl} }:frame in Value when fl is layout]
@@ -41,7 +39,7 @@ get_frames(Value, layout, timeslice) =
         it.WindDir?.=[\@].abbre
         it
 
-parse_area(Value, timeslice) =
+parse_area = (Value, timeslice) ->
     [curr, ...frames12] = get_frames Value, \12, timeslice
     for frame in get_frames Value, \3, timeslice
         if frame.ts.getTime() == frames12[0].ts.getTime()
@@ -49,7 +47,7 @@ parse_area(Value, timeslice) =
         break unless frames12.length
         {} <<< curr <<< frame
 
-parse_forecast_72hr(data, cb) =
+parse_forecast_72hr = (data, cb) -->
     parser = new (require \xml2js).Parser
     tmpslice = {}
 
@@ -65,13 +63,13 @@ parse_forecast_72hr(data, cb) =
 
 # typhoon
 
-fetch_typhoon(cb) =
+fetch_typhoon = (cb) -->
     fetch {
         url: \http://www.cwb.gov.tw/V7/prevent/typhoon/Data/PTA_NEW/pta_index_eng.htm
         headers: Referer: \http://www.cwb.gov.tw/V7/prevent/typhoon/Data/PTA_NEW/index_eng.htm
     }, cb
 
-parse_typhoon(data, cb) =
+parse_typhoon = (data, cb) -->
     $ = require \cheerio .load(data)
 
     res = []
